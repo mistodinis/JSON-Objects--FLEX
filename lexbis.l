@@ -15,7 +15,6 @@ using namespace std;
 int i , 
 numarDeListe = 0,
 numarDeObiecteImbricate = 0;
-
 string OBIECT = "obiect";
 string NUMAR = "numar";
 string SIR = "sir";
@@ -23,7 +22,6 @@ string NULLVALUE = "null";
 string BOOLEAN = "boolean";
 string LISTA = "lista";
 string RADACINA = "radacina";
-
 int nrOfElements[100];
 int isActive[100];
 char current_object[100];
@@ -54,8 +52,6 @@ void insertValueInMap(map<string,set<string>> &myMap , string  &key , string & v
 
 startCollection "{"+
 endCollection "}"
-startList "["
-endList "]"
 
 semn [ -]?
 cifra [0-9]
@@ -63,6 +59,8 @@ numar {semn}+{cifra}+\.?{cifra}?
 sir "\""+[a-zA-Z0-9 ,*%#/:.;-]*"\""+
 boolean "true"|"false"
 obiect "\""+[a-zA-Z0-9]*"\""+":"+" "+
+startList "["
+endList "]"
 nullValue "null"
 
 
@@ -72,7 +70,6 @@ nullValue "null"
 <INITIAL>{startCollection}  {
     
     if(numarDeObiecteImbricate == 0){
-        
         numarDeObiecteImbricate++;
         objectList.push_back(RADACINA);
     }
@@ -84,127 +81,158 @@ nullValue "null"
 <INITIAL>{endCollection} { BEGIN(COLLECTION);}
 
 <COLLECTION>{obiect} {
-   
+    // printf("%s \n", yytext);
     strcpy(current_object,yytext);
+    // printf(" %s  === curObj  ==== COL obj\n" ,current_object);
+    
+   
 }
-
 <COLLECTION>","+" "*"\n"*"\t"*{startCollection}+ {
+    // printf("here\n");
 }
 
 <COLLECTION>{startCollection} {
-    
     insertValueInMap(objectMap,objectList.back(),OBIECT);
-    
     numarDeObiecteImbricate++;
-    
-    objectList.push_back(current_object);
+    // cout << "Object pushed.. " << current_object << " == COL startColection\n"; 
+     objectList.push_back(current_object);
 }
 
 <COLLECTION>{startList} {
-   
     numarDeListe++;
+    // printf("nr liste = %d === COL -startList \n"  , numarDeListe);
     nrOfElements[numarDeListe] = 0;
     insertValueInMap(objectMap,objectList.back(),LISTA);
     strcpy(headOfList, current_object);
     list.push_back(current_object);
-    
+    // printf("headOfList = %s == Col - startList" , headOfList);
     BEGIN(LIST);
 }
 
+
 <COLLECTION>{sir} {
-   
+    // printf("%s \n ", yytext);
     insertValueInMap(objectMap,objectList.back(),SIR);
-}
+    }
 
 <COLLECTION>{numar} {
-   
+    // printf("%s sirLAW\n ", yytext);
      insertValueInMap(objectMap,objectList.back(),NUMAR);
-}
 
+}
 <COLLECTION>{nullValue} {
-    
+    // printf("%s sirLAW\n ", yytext);
      insertValueInMap(objectMap,objectList.back(),NULLVALUE);
-}
 
+}
 <COLLECTION>{boolean} {
-   
+    //  printf("%s sirLAW\n ", yytext);
      insertValueInMap(objectMap,objectList.back(),BOOLEAN);
+
 }
 
 <COLLECTION>{endCollection} {
    
-    string s2;
-    s2 = objectList.back();
    
+    // map<string, set<string>>::iterator it;
+    string s2;
+    
+    s2 = objectList.back();
+    
+    // cout << "==================\n";
+   
+
+    // cout << s2 << endl;
     auto setString = objectMap.find(s2);
     set<string> ssset = setString->second;
-    int j = 0 ,
-        sizeOfObjectList = objectList.size() - 1;
-    
+    int j = 0 , sizeOfObjectList = objectList.size() - 1;
     for(auto s1 = objectList.begin(); s1 != objectList.end(); s1++){
-        if(j == sizeOfObjectList){
-        
-            cout << *s1 << " contine: ";
-            break;
-        }
-        cout << *s1 << "-> " ; 
-        j++;
+     if(j == sizeOfObjectList){
+         cout << *s1 << " contine: ";
+         break;
+     }
+     
+     cout << *s1 << "-> " ; 
+     j++;
     }
     
     for(auto stringContor = ssset.begin(); stringContor != ssset.end(); ++stringContor){
         cout << *stringContor << " ,";
     }
     cout << endl;
+    
     numarDeObiecteImbricate--;
-   
     objectMap.erase(objectList.back());
+    // printf("Deleting.. %s  === COL endColection " , objectList.back());
+    // cout << "Deleting.. " << objectList.back() << " === COL endColections\n";
     objectList.pop_back();
-   
+    // printf("%d \n" , objectMap.size());
     if(!s2.empty()   && !list.empty()){
         if(s2.find(list.back()) < s2.size()){
-             
-            nrOfElements[numarDeListe]++;
-            printf(" numarul din lista actuala este = %d \n" , nrOfElements[numarDeListe]);
-            
-            string numarDeElemente = to_string(nrOfElements[numarDeListe]);
-            string aux = list.back() + "[" + numarDeElemente + "]";
-            
-            objectList.push_back(aux);
+        nrOfElements[numarDeListe]++;
+        printf(" numarul din lista actuala este = %d \n" , nrOfElements[numarDeListe]);
+        // currentListMember = strcat(headOfList, "[");
+        // currentListMember = strcat(currentListMember , itoa(nrOfElements[numarDeListe] - 1));
+        // currentListMember = strcat(currentListMember, "]");
+        // cout << list.back() << " LIST - startCol \n";
+    // cout  << "Object pushed.. " << list.back() << " COL - endColection\n"; 
+         string numarDeElemente = to_string(nrOfElements[numarDeListe]);
+         string aux = list.back() + "[" + numarDeElemente + "]";
+        objectList.push_back(aux);
         }
     }
+ 
+   
+    // BEGIN(INITIAL);
+    
 }
 
 <COLLECTION>{endList} {
-   
+    //  printf("%d \n" , nrOfElements[numarDeListe]);
      numarDeListe--;
-   
+    // printf("nr liste = %d === COL - endList\n"  , numarDeListe);
+
      objectList.pop_back();
      list.pop_back();
+    //  BEGIN(INITIAL);
 }
 
 <LIST>{startCollection} {
-   
+    // nrOfElements[numarDeListe]++;
+    // printf("%d \n" ,nrOfElements[numarDeListe]);
     isActive[numarDeListe] = 1;
-  
-    string numarDeElemente = to_string(nrOfElements[numarDeListe]);
-    string aux = list.back() + "[" + numarDeElemente + "]";
+    // currentListMember = strcat(headOfList, "[");
+    // currentListMember = strcat(currentListMember , itoa(nrOfElements[numarDeListe] - 1));
+    // currentListMember = strcat(currentListMember, "]");
+        // cout << "Object adding.. "<<list.back() << " LIST - startCol \n";
+        string numarDeElemente = to_string(nrOfElements[numarDeListe]);
+         string aux = list.back() + "[" + numarDeElemente + "]";
     objectList.push_back(aux);
 
     BEGIN(COLLECTION);
 }
 
 <LIST>{numar}" "*","? {
-       
-        nrOfElements[numarDeListe]++;   
+        nrOfElements[numarDeListe]++;
+        // printf("numar " );
+        
 }
-
+<LIST>{sir}" "*"," {
+    //  printf("%s \n sirLaw" , yytext);
+}
+<LIST>{nullValue}" "*"," {
+    //  printf("%s \n " , yytext);
+}
+<LIST>{obiect} {
+    //  printf("obiect \n");
+ }
 
 <LIST>{endList} {
-   
-    numarDeListe--;
+    //  printf("%d \n" , nrOfElements[numarDeListe]);
+     numarDeListe--;
+    // printf("nr liste = %d ===List_ endList\n"  , numarDeListe);
     list.pop_back();
-    
-    BEGIN(COLLECTION);
+     BEGIN(COLLECTION);
  }
 
 <LIST>.|\n ;
